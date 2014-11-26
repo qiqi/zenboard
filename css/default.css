@@ -1,0 +1,55 @@
+﻿.thumbnail-outside {
+    border: solid;
+    border-width: 3px;
+    border-color: #cccccc;
+    margin: 0px;
+    height: 9vw;
+    width: 16vw;
+    overflow: hidden;
+    overflow: hidden;
+    background: none;
+}
+.thumbnail-outside.selected {
+    border-color: #38C;
+}
+.thumbnail-inside {
+    position: relative;
+}
+
+.title {
+    position: absolute;
+    overflow: hidden;
+    left: 6.67vw;
+    top: 6.67vw;
+    z-index: 1;
+    font-weight: bold;
+    font-size: 6.67vw;
+    white-space: pre-wrap;
+}
+.outer {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    overflow: hidden;
+    border: none;
+}
+.inner {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    overflow: hidden;
+    border: none;
+}
+#inkCanvas, #board {
+    position:absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vw;
+}
+#inkCanvas {
+    z-index: 100;
+}
+button {
+    z-index: 1000;
+}
