@@ -1,31 +1,26 @@
-﻿(function () {
+﻿// http://localhost:8000/?fbid=10205725052744611&
+//
+(function () {
+    var firebaseRef = new Firebase("https://zenboard.firebaseio.com/public");
+    firebaseRef = firebaseRef.child('facebook:' + getParameterByName('fbid'));
+
     // UI object references.
-    console.log('sdfdsfsadf');
     var inkCanvas;
     var inkContext;
-    strokes = {};
-    var ref = firebaseRef.child('test-pres').child('ink');
+    var strokes = {};
 
-    // Initial pointer values.
-    var pointerId = -1;
-    var pointerDeviceType = null;
-
-    // Initial stroke property values.
-    var strokeColor;
-    var strokeWidth;
-
-    //
     // End global variables
-    //
 
-    // Obtain reference to the specified element.
-    function get(elementId) {
-        return document.getElementById(elementId);
+    function getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
 
     $(document).ready(function() {
         // Set up the UI.
-        inkCanvas = get("inkCanvas");
+        inkCanvas = document.getElementById("inkCanvas");
         inkContext = inkCanvas.getContext("2d");
 
         inkContext.lineCap = "round";
@@ -34,20 +29,52 @@
         inkCanvas.width = window.innerWidth;
         inkCanvas.height = window.innerWidth;
 
-        ref.on('value', function(snapshot) {
-            inkContext.clearRect(0, 0, inkCanvas.width, inkCanvas.height);
-            var strokes = snapshot.val();
-            console.log(strokes);
-            for (id in strokes) {
-                renderSerializedStroke(strokes[id]);
-            }
-        });
+        if (getParameterByName('board')) {
+            setupUpdates(firebaseRef.child(getParameterByName('board')));
+        } else {
+            firebaseRef.child('currentPres').once('value', function(snap) {
+                console.log(snap.val());
+                setupUpdates(firebaseRef.child(snap.val()));
+            });
+        }
     });
 
+    $(window).resize(function(){
+        var height = inkCanvas.height / inkCanvas.width;
+        inkCanvas.width = window.innerWidth;
+        inkCanvas.height = inkCanvas.width * height;
+        $(inkCanvas).width(inkCanvas.width);
+        $(inkCanvas).height(inkCanvas.height);
+        updateStrokes();
+    });
+
+    function setupUpdates(ref) {
+        ref.child('strokes').on('value', function(snap) {
+            strokes = snap.val();
+            console.log(strokes);
+            updateStrokes();
+        });
+        ref.child('height').on('value', function(snap) {
+            inkCanvas.height = inkCanvas.width * snap.val();
+            $(inkCanvas).height(inkCanvas.height);
+            updateStrokes();
+        });
+        ref.child('scroll').on('value', function(snap) {
+            var s = snap.val();
+            $('html, body').animate({
+                scrollTop: window.innerWidth * s - window.innerHeight
+            }, 1000);
+        });
+    }
+
+    function updateStrokes() {
+        inkContext.clearRect(0, 0, inkCanvas.width, inkCanvas.height);
+        for (id in strokes) {
+            renderSerializedStroke(strokes[id]);
+        }
+    }
+
     function deserializeStrokeData(data) {
-        // function serializePixel(x) {
-        //     return Math.round(x / inkCanvas.width * 40000).toString(36);
-        // }
         function deserializePixel(x) {
             return Number.parseInt(x, 36) / 40000 * inkCanvas.width;
         }

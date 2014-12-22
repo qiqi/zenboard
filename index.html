@@ -4,28 +4,14 @@
     <meta charset="utf-8" />
     <title>ZenBoard</title>
 
-    <!-- WinJS references -->
     <link rel="stylesheet" type="text/css" href='css/default.css'/>
 
-    <script src='bower_components/jquery/jquery.js'></script>
-    <script src='bower_components/angular/angular.js'></script>
     <script src="bower_components/firebase/firebase.js"></script>
-    <script src="bower_components/angularfire/dist/angularfire.min.js"></script>
-
+    <script src="bower_components/jquery/jquery.min.js"></script>
     <!-- ZenBoard references -->
-    <script src="/js/zenBoard.js"></script>
     <script src="/js/ink.js"></script>
 </head>
-<body style="overflow: hidden;">
-    <div id="board" ng-controller="boardCtrl" style="width:100%; height:100%; overflow-y: scroll;">
-        <canvas id="inkCanvas"></canvas>
-        <div id="showBoard" style="width:100%; height:100%;">
-            <div style="width: 100vw; height: 100vh; position:relative;">
-                <div class="outer show" ng-style="{left: slide.left+'vw', width: (slide.right-slide.left)/Math.exp(slide.zoom/100)+'vw', top: slide.top+'vw', height: (slide.bottom-slide.top)/Math.exp(slide.zoom/100)+'vw', zoom: Math.exp(slide.zoom/100) / window.innerWidth * 1000}">
-                    <iframe id="webview" class="inner show" ng-style="{left: 100/(slide.right-slide.left)*slide.shiftX+'vw', width:(10000/(slide.right-slide.left))*Math.exp(slide.scale/100)+'vw', top: 100/(slide.bottom-slide.top)*slide.shiftY+'vw', height:(10000/(slide.bottom-slide.top))*Math.exp(slide.scale/100)+'vw'}"></iframe>
-                </div>
-            </div>
-        </div>
-    </div>
+<body style="overflow-x: hidden; overflow-y: scroll;">
+    <canvas id="inkCanvas"></canvas>
 </body>
 </html>
