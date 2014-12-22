@@ -1,0 +1,27 @@
+div.overflow-hidden {
+    overflow: hidden !important;
+}
+.landing-header {
+    font: bold 16vw Georgia, serif;
+    text-align: center;
+    margin-top: 5vw;
+}
+.landing-subheader {
+    font: bold 4vw arial, sans-serif;
+    text-align: center;
+    margin-bottom: 2vw;
+    color: #800;
+}
+.landing-footer {
+    font: 8pt arial, sans-serif;
+    text-align: right;
+    margin: 50px;
+}
+.button-wrapper {
+    padding: 10px;
+    padding-left: 50px;
+    padding-right: 50px;
+}
+body, .ui-grid-a, .ui-block-a, .ui-block-b {
+    background-image: url('../images/white_wall.png');
+}

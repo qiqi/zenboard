@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html ng-app="zenBoard">
+<head>
+    <meta charset="utf-8" />
+    <title>ZenBoard</title>
+
+    <link rel="stylesheet" type="text/css" href='bower_components/jquery-mobile/jquery.mobile-1.4.5.css'/>
+    <link rel="stylesheet" type="text/css" href='css/studio.css'/>
+
+    <script src="bower_components/firebase/firebase.js"></script>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/jquery-mobile/jquery.mobile-1.4.5.min.js"></script>
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/marked/lib/marked.js"></script>
+    <script src="bower_components/angular-md/dist/angular-md.min.js"></script>
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+
+    <!-- ZenBoard references -->
+    <script src="js/zenBoard.js"></script>
+</head>
+<body ng-controller="loginCtrl" ng-class="{'overflow-hidden':showPage=='editor'}">
+<div data-role="page" ng-class="{'overflow-hidden':showPage=='editor'}">
+  <div ng-show="showPage=='login'">
+    <div class="landing-header">ZenBoard</div>
+    <div class="landing-subheader">Studio</div>
+    <div class="button-wrapper">
+       <button data-theme="b" ng-click="facebookLogin()">Login via Facebook</button>
+    </div>
+    <div class="landing-footer">
+        <a href="https://github.com/qiqi/ZenBoard" style="color:black">
+            https://github.com/qiqi/zenboard
+        </a>
+    </div>
+  </div>
+</body>
+</html>
