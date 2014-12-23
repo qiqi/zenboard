@@ -90,6 +90,7 @@ controller('loginCtrl', function ($scope, $location) {
         if (auth) {
             if (!auth.facebook) {
                 firebaseRoot.unauth();
+                $scope.uidd = null;
                 return;
             }
             if (authInterval) {
@@ -125,6 +126,7 @@ controller('loginCtrl', function ($scope, $location) {
 
     $scope.firebaseLogout = function () {
         firebaseRoot.unauth();
+        $scope.uid = null;
         $scope.showPage = 'login';
     }
 
@@ -152,8 +154,10 @@ controller('loginCtrl', function ($scope, $location) {
     }, function (hash) {
         if (hash) {
             $scope.showPage = 'editor';
-        } else {
+        } else if ($scope.uid) {
             $scope.showPage = 'chooser';
+        } else {
+            $scope.showPage = 'login';
         }
     })
 }).
