@@ -22,11 +22,62 @@ function GUID() {
           + S4() + "-" + S4() + S4() + S4()).toLowerCase();
 }
 
+var TEMPLATE = ' \
+<div id="note"><md ng-model="note" id="md-note"></md></div> \
+<textarea ng-model="note" id="editor"> \
+</textarea> \
+';
+
 Firebase.INTERNAL.forceWebSockets();
 firebaseRoot = new Firebase("https://zenboard.firebaseio.com/");
 
 angular.module('zenBoard', ['yaru22.md']).
-controller('loginCtrl', function ($scope) {
+directive('zenNote', function () {
+    return {
+        restrict: 'E',
+        template: TEMPLATE,
+        scope: {
+            noteId: '=',
+            uid: '=',
+            showPage: '='
+        }, controller: function($scope) {
+            $scope.note = '';
+            $scope.$watch('noteId', function () {
+                console.log($scope.uid, $scope.noteId);
+                if ($scope.uid && $scope.noteId) {
+                    var userRef = firebaseRoot.child('private').child($scope.uid);
+                    $scope.noteRef = userRef.child('notes').child($scope.noteId);
+                    $scope.noteRef.once('value', function(snap) {
+                        $scope.note = snap.val();
+                    });
+                }
+            });
+        }, link: function(scope, element) {
+            element.trigger('create');
+            var textArea = element.find('textarea');
+            var mdNote = element.find('md');
+            var textChanged = false;
+            textArea.keyup(function() {
+                textChanged = true;
+                [50, 200].forEach(function (dt) {
+                    setTimeout(function () {
+                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, mdNote[0]]);
+                    }, dt);
+                });
+            });
+            function updateFirebase() {
+                if (textChanged) {
+                    textChanged = false;
+                    console.log(scope.noteRef);
+                    scope.noteRef.set(textArea.val());
+                }
+            }
+            setInterval(updateFirebase, 5000);
+            textArea.blur(updateFirebase);
+        }
+    };
+}).
+controller('loginCtrl', function ($scope, $location) {
     $scope.showPage = 'login';
     $scope.isLoggedIn = function () {
         return $scope.showPage == 'chooser' || $scope.showPage == 'editor';
@@ -36,7 +87,6 @@ controller('loginCtrl', function ($scope) {
     var authInterval = setInterval(loginIfAuthenticated, 1000);
     function loginIfAuthenticated() {
         var auth = firebaseRoot.getAuth();
-        console.log(auth);
         if (auth) {
             if (!auth.facebook) {
                 firebaseRoot.unauth();
@@ -46,27 +96,23 @@ controller('loginCtrl', function ($scope) {
                 clearInterval(authInterval);
             }
             $scope.uid = auth.uid;
-            var privateRef = firebaseRoot.child('private').child(auth.uid);
-            privateRef.child('authData').set(auth);
 
-            var username = auth.facebook.displayName;
-            if (username) {
-                firebaseRoot.child('users').child(username).set(auth.uid);
+            if (!$scope.isLoggedIn()) {
+                $scope.showPage = 'chooser';
             }
-
-            var noteRef = privateRef.child('notes');
-            noteRef.once('value', function (snap) {
-                $scope.notes = snap.val();
-                if (!$scope.notes) {
-                    $scope.notes = {};
-                }
-                if (!$scope.isLoggedIn()) {
-                    $scope.showPage = 'chooser';
-                    $scope.$apply();
-                }
-            });
         }
     }
+
+    $scope.$watch('showPage', function() {
+        var noteRef = firebaseRoot.child('private').child($scope.uid).child('notes');
+        noteRef.once('value', function (snap) {
+            $scope.notes = snap.val();
+            if (!$scope.notes) {
+                $scope.notes = {};
+            }
+            $scope.$apply();
+        });
+    });
 
     $scope.facebookLogin = function () {
         firebaseRoot.authWithOAuthPopup("facebook", function(err, auth) {
@@ -74,164 +120,15 @@ controller('loginCtrl', function ($scope) {
                 console.log(err);
                 console.log(err.code);
             }
-            console.log(auth);
         });
     };
 
-    $scope.twitterLogin = function () {
-        function getTwitterRequestToken(callbackURL, clientID, clientSecret) {
-
-            function sendPostRequest(url, authzheader) {
-                try {
-                    var request = new XMLHttpRequest();
-                    request.open("POST", url, false);
-                    request.setRequestHeader("Authorization", authzheader);
-                    request.send(null);
-                    return request.responseText;
-                } catch (err) {
-                    WinJS.log("Error sending request: " + err, "Web Authentication SDK Sample", "error");
-                }
-            }
-
-            function getSignature(sigBaseString, keyText) {
-                var keyMaterial = Windows.Security.Cryptography.CryptographicBuffer.convertStringToBinary(keyText, Windows.Security.Cryptography.BinaryStringEncoding.Utf8);
-                var macAlgorithmProvider = Windows.Security.Cryptography.Core.MacAlgorithmProvider.openAlgorithm("HMAC_SHA1");
-                var key = macAlgorithmProvider.createKey(keyMaterial);
-                var tbs = Windows.Security.Cryptography.CryptographicBuffer.convertStringToBinary(sigBaseString, Windows.Security.Cryptography.BinaryStringEncoding.Utf8);
-                var signatureBuffer = Windows.Security.Cryptography.Core.CryptographicEngine.sign(key, tbs);
-                var signature = Windows.Security.Cryptography.CryptographicBuffer.encodeToBase64String(signatureBuffer);
-
-                return signature;
-            }
-
-            var twitterURL = "https://api.twitter.com/oauth/request_token";
-            var timestamp = Math.round(new Date().getTime() / 1000.0);
-            var nonce = Math.floor(Math.random() * 1000000000);;
-
-            // Compute base signature string and sign it.
-            //    This is a common operation that is required for all requests even after the token is obtained.
-            //    Parameters need to be sorted in alphabetical order
-            //    Keys and values should be URL Encoded.
-            var sigBaseStringParams = "oauth_callback=" + encodeURIComponent(callbackURL);
-            sigBaseStringParams += "&" + "oauth_consumer_key=" + clientID;
-            sigBaseStringParams += "&" + "oauth_nonce=" + nonce;
-            sigBaseStringParams += "&" + "oauth_signature_method=HMAC-SHA1";
-            sigBaseStringParams += "&" + "oauth_timestamp=" + timestamp;
-            sigBaseStringParams += "&" + "oauth_version=1.0";
-            var sigBaseString = "POST&";
-            sigBaseString += encodeURIComponent(twitterURL) + "&" + encodeURIComponent(sigBaseStringParams);
-
-            var keyText = clientSecret + "&";
-            var signature = getSignature(sigBaseString, keyText);
-            var dataToPost = "OAuth oauth_callback=\"" + encodeURIComponent(callbackURL) + "\", oauth_consumer_key=\"" + clientID + "\", oauth_nonce=\"" + nonce + "\", oauth_signature_method=\"HMAC-SHA1\", oauth_timestamp=\"" + timestamp + "\", oauth_version=\"1.0\", oauth_signature=\"" + encodeURIComponent(signature) + "\"";
-            var response = sendPostRequest(twitterURL, dataToPost);
-            var oauth_token;
-            var oauth_token_secret;
-            var keyValPairs = response.split("&");
-
-            for (var i = 0; i < keyValPairs.length; i++) {
-                var splits = keyValPairs[i].split("=");
-                switch (splits[0]) {
-                    case "oauth_token":
-                        oauth_token = splits[1];
-                        break;
-                    case "oauth_token_secret":
-                        oauth_token_secret = splits[1];
-                        break;
-                }
-            }
-            return oauth_token;
-        }
-
-        var callbackURL = "http://twitter.com";
-        var clientID = '742896585779513';
-        var clientSecret = 'LkO6iTMfJZfmnoXaYEE73Xs81qbCicgoPyF6QhrqmwWKOy2xIy';
-        var oauth_token = getTwitterRequestToken(callbackURL, clientID, clientSecret);
-
-        // Send the user to authorization
-        twitterURL = "https://api.twitter.com/oauth/authorize?oauth_token=" + oauth_token;
-
-        var startURI = new Windows.Foundation.Uri(twitterURL);
-        var endURI = new Windows.Foundation.Uri(callbackURL);
-
-        Windows.Security.Authentication.Web.WebAuthenticationBroker.authenticateAsync(
-            Windows.Security.Authentication.Web.WebAuthenticationOptions.none, startURI, endURI)
-        .done(function (result) {
-           switch (result.responseStatus) {
-               case Windows.Security.Authentication.Web.WebAuthenticationStatus.success:
-                   var fragment = Windows.Foundation.Uri(result.responseData).fragment;
-                   if (fragment.indexOf("#access_token=") != -1) {
-                       var token = fragment.substring(
-                           new String("#access_token=").length,
-                           fragment.indexOf("&expires_in="));
-                       // Add API calls here
-                       console.log('token', token);
-                       firebaseRoot.authWithOAuthToken("twitter", token, function (error, authData) {
-                           if (error) {
-                               console.log("Login Failed!", error);
-                           } else {
-                               console.log("Authenticated successfully with payload:", authData);
-                               loginIfAuthenticated();
-                           }
-                       });
-                   }
-                   break;
-               case Windows.Security.Authentication.Web.WebAuthenticationStatus.userCancel:
-                   console.log(window.toStaticHTML(result.responseData));
-                   break;
-               case Windows.Security.Authentication.Web.WebAuthenticationStatus.errorHttp:
-                   console.log(window.toStaticHTML(result.responseData));
-                   break;
-           }
-        }, function (err) {
-           console.log(err);
-        });
-    };
-
-    $scope.isSignupValid = function () {
-        return $scope.signupForm.email && $scope.signupForm.password
-            && $scope.signupForm.password == $scope.signupForm.password2
-            && $scope.signupForm.password.length >= 6
-            && $scope.signupForm.$valid;
-    };
-    $scope.firebaseSignup = function () {
-        firebaseRoot.createUser({
-            email: $scope.signupForm.email,
-            password: $scope.signupForm.password
-        }, function (error) {
-            if (error === null) {
-                $scope.loginForm.message = 'New user created; you can log in now.';
-                $scope.showPage = 'loginForm';
-            } else {
-                $scope.signupForm.message = error.message;
-                $scope.$apply();
-            }
-        });
-    };
-    $scope.isLoginValid = function () {
-        return $scope.loginForm.email && $scope.loginForm.password
-            && $scope.loginForm.$valid;
-    };
-    $scope.firebaseLogin = function () {
-        firebaseRoot.authWithPassword({
-            email: $scope.loginForm.email,
-            password: $scope.loginForm.password
-        }, function (error, authData) {
-            if (error === null) {
-                loginIfAuthenticated();
-            } else {
-                $scope.loginForm.message = error.message;
-                $scope.$apply();
-            }
-        });
-    };
     $scope.firebaseLogout = function () {
         firebaseRoot.unauth();
         $scope.showPage = 'login';
     }
 
     $scope.searchText = '';
-    $scope.note = '';
 
     $scope.$watch('showPage', function () {
         [100, 500, 2000, 10000, 300000].forEach(function (dt) {
@@ -241,15 +138,38 @@ controller('loginCtrl', function ($scope) {
         });
     });
 
-    $scope.startWithNote = function (id) {
-        $scope.note = $scope.notes[id];
-        $scope.presId = GUID();
-        $scope.showPage = 'editor';
+    $scope.openNote = function (id) {
+        $scope.noteId = id;
+        console.log(id);
+        $location.hash(id);
+    };
+    $scope.newNote = function () {
+        $scope.openNote(GUID());
     };
 
-    $scope.startWithoutNote = function () {
-        $scope.note = 'This is note';
-        $scope.presId = GUID();
-        $scope.showPage = 'editor';
+    $scope.$watch(function () {
+        return $location.hash();
+    }, function (hash) {
+        if (hash) {
+            $scope.showPage = 'editor';
+        } else {
+            $scope.showPage = 'chooser';
+        }
+    })
+}).
+filter('notesContains', function() {
+    return function(notes, text) {
+        if (text) {
+            var filteredNotes = {};
+            for (var id in notes) {
+                var note = notes[id];
+                if (note && note.indexOf && note.indexOf(text) >= 0) {
+                    filteredNotes[id] = note;
+                }
+            }
+            return filteredNotes;
+        } else {
+            return notes;
+        }
     };
 });

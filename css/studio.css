@@ -22,6 +22,62 @@ div.overflow-hidden {
     padding-left: 50px;
     padding-right: 50px;
 }
-body, .ui-grid-a, .ui-block-a, .ui-block-b {
+html, body, div {
     background-image: url('../images/white_wall.png');
+}
+div#note {
+    margin: 1vw;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 48vw;
+    height: 98vh;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+md#md-note {
+    left: 0;
+    top: 0;
+    width: 48vw;
+}
+textarea#editor {
+    position: absolute;
+    left: 50vw;
+    top: 0;
+    width: 48vw;
+    height: 98vh !important;
+    resize: none;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.search-container {
+  margin-top: 5vw;
+  margin-left: 5vw;
+  margin-right: 5vw;
+  margin-bottom: 0vw;
+}
+#search {
+  height: 60px;
+}
+.thumb-container {
+  position: relative;
+  display: inline-block;
+  width: 360px;
+  height: 400px;
+  margin: 50px;
+}
+.thumb {
+  overflow: hidden;
+  padding: 20px;
+  margin: 30px;
+  border: solid 2px #ccc;
+  display: inline-block;
+  width: 320px;
+  height: 360px;
+  vertical-align: top;
+  cursor: pointer;
+}
+.thumb.selected {
+  border: solid 2px #38c;
 }
