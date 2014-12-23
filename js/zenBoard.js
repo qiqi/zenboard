@@ -44,7 +44,7 @@ directive('zenNote', function () {
             $scope.note = '';
             $scope.$watch('noteId', function () {
                 console.log($scope.uid, $scope.noteId);
-                if ($scope.uid && $scope.noteId & firebaseRoot) {
+                if ($scope.uid && $scope.noteId && firebaseRoot) {
                     var userRef = firebaseRoot.child('private').child($scope.uid);
                     $scope.noteRef = userRef.child('notes').child($scope.noteId);
                     $scope.noteRef.once('value', function(snap) {
@@ -105,7 +105,7 @@ controller('loginCtrl', function ($scope, $location) {
     }
 
     $scope.$watch('showPage', function() {
-        if (!firebaseRoot) return;
+        if (!firebaseRoot || !$scope.uid) return;
         var noteRef = firebaseRoot.child('private').child($scope.uid).child('notes');
         noteRef.once('value', function (snap) {
             $scope.notes = snap.val();
