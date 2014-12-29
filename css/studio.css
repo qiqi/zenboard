@@ -1,4 +1,6 @@
 div.overflow-hidden {
+    width: 100vw !important;
+    height: 100vh !important;
     overflow: hidden !important;
 }
 .landing-header {
