@@ -42,7 +42,7 @@ directive('zenNote', function () {
             showPage: '='
         }, controller: function($scope) {
             $scope.note = '';
-            $scope.$watch('noteId', function () {
+            $scope.$watchGroup(['noteId', 'uid'], function () {
                 console.log($scope.uid, $scope.noteId);
                 if ($scope.uid && $scope.noteId && firebaseRoot) {
                     var userRef = firebaseRoot.child('private').child($scope.uid);
