@@ -87,6 +87,7 @@ controller('loginCtrl', function ($scope, $location) {
     var authInterval = setInterval(loginIfAuthenticated, 1000);
     function loginIfAuthenticated() {
         var auth = firebaseRoot.getAuth();
+        console.log('loginIfAuth', auth);
         if (auth) {
             if (!auth.facebook) {
                 firebaseRoot.unauth();
