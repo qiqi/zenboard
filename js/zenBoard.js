@@ -143,7 +143,6 @@ controller('loginCtrl', function ($scope, $location) {
 
     $scope.openNote = function (id) {
         $scope.noteId = id;
-        console.log(id);
         $location.hash(id);
     };
     $scope.newNote = function () {
@@ -152,8 +151,9 @@ controller('loginCtrl', function ($scope, $location) {
 
     $scope.$watch(function () {
         return $location.hash();
-    }, function (hash) {
-        if (hash) {
+    }, function (id) {
+        if (id) {
+            $scope.noteId = id;
             $scope.showPage = 'editor';
         } else if ($scope.uid) {
             $scope.showPage = 'chooser';
