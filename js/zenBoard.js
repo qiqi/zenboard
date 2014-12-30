@@ -83,11 +83,9 @@ controller('loginCtrl', function ($scope, $location) {
         return $scope.showPage == 'chooser' || $scope.showPage == 'editor';
     }
 
-    loginIfAuthenticated();
-    var authInterval = setInterval(loginIfAuthenticated, 1000);
+    var authInterval = setInterval(loginIfAuthenticated, 200);
     function loginIfAuthenticated() {
         var auth = firebaseRoot.getAuth();
-        console.log('loginIfAuth', auth);
         if (auth) {
             if (!auth.facebook) {
                 firebaseRoot.unauth();
@@ -101,6 +99,7 @@ controller('loginCtrl', function ($scope, $location) {
 
             if (!$scope.isLoggedIn()) {
                 $scope.showPage = 'chooser';
+                $scope.$apply();
             }
         }
     }
