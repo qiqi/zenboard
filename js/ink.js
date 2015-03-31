@@ -2,7 +2,7 @@
 //
 (function () {
     var firebaseRef = new Firebase("https://zenboard.firebaseio.com/public");
-    firebaseRef = firebaseRef.child('facebook:' + getParameterByName('fbid'));
+    firebaseRef = firebaseRef.child(getParameterByName('uid'));
 
     // UI object references.
     var inkCanvas;
